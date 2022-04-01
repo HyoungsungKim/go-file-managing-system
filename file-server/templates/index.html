@@ -1,0 +1,32 @@
+<!-- https://github.com/gin-gonic/examples/blob/master/upload-file/single/public/index.html -->
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Single file upload</title>
+</head>
+<body>
+<h1>Upload single file with fields</h1>
+
+<form action="/upload" method="post" enctype="multipart/form-data">
+    Name: <input type="text" name="name"><br>
+    Email: <input type="email" name="email"><br>
+    Files: <input type="file" name="file"><br><br>
+    <input type="submit" value="Submit">
+</form>
+</body>
+
+<!--
+<html>
+    <head>
+        <title>File CRUD test</title>
+    </head>
+    <body>
+        <h2>page: {{ .page }}</h2>
+        <form action="http://localhost:8080/upload" method="POST" enctype="multipart/form-data">
+            upload file: <input type="file" name="file">
+            <input type="submit" value="Submit">
+        </form>
+    </body>
+</html>
+-->

@@ -1,0 +1,31 @@
+curl -X POST http://172.32.0.1:9010/upload \  
+  -F "file=@/helloworld.txt" \
+  -H "Content-Type: multipart/form-data"
+  
+curl -X GET http://172.32.0.1:9010/ping
+
+curl -X POST http://172.32.0.1:9010/upload/kim \
+  -F "file=@helloworld.txt" \
+  -H "Content-Type: multipart/form-data"
+  
+curl -X POST http://172.32.0.1:9010/upload/kim -F "file=@helloworld.txt" -H "Content-Type: multipart/form-data"
+
+curl -X GET http://172.32.0.1:9010/download/kim?filename=helloworld.txt
+
+curl -X GET http://172.32.0.1:9010/ping -F "userName=kim"
+
+curl -X GET http://172.32.0.1:9010/ping/kim
+
+
+
+curl -X POST http://172.32.0.1:9010/upload/kim -F "file=@./testResource/WhereAmIGoing.gif" -H "Content-Type: multipart/form-data"
+
+curl -X POST http://172.32.0.1:9010/upload/kim -F "file=@./testResource/helloworld.txt" -H "Content-Type: multipart/form-data"
+
+curl -X GET http://172.32.0.1:9010/download/kim/lenna.png > len.png
+curl -X GET http://172.32.0.1:9010/download/kim/lenna.png
+
+http://localhost:9010/download/kim/lenna.png
+
+http://localhost:9010/download/kim/?filename=lenna.png
+http://172.32.0.1:9010/download/kim/?filename=lenna.png

@@ -6,9 +6,9 @@ For example http curl commands, please read `testCommandtxt.txt`
 ## TODO list
 Below list TODO list are in a queue of next implementation.
 
-- [x] Implement minimum viable CRD(Create, Read, Delete)
+- [x] Implement minimum viable Upload, Download, View, Delete
   - [ ] Define update  
-    - Option 1: preserve previous version of file, like IPFS (InterPlanetary file system)
+    - Option 1: Preserve previous version of file, like IPFS (InterPlanetary file system)
     - Option 2: Remove previous version of file and upload new file
 - [ ] Design file system
   - [ ] Define UUID(Universally Unique IDentifier) generator

@@ -11,7 +11,8 @@ Below list TODO list are in a queue of next implementation.
     - Option 1: Preserve previous version of file, like IPFS (InterPlanetary file system)
     - Option 2: Remove previous version of file and upload new file
 - [ ] Design file system
-  - [ ] Define UUID(Universally Unique IDentifier) generator
+  - [ ] Define UUID(Universally Unique IDentifier) generator  
+    (e.g., storage/a/b/c/helloworld.txt -> storage/UUID/helloworld.txt, preserve an actual file directory in DB)
   - [ ] Change URI to suitable URI, which follows file system design
 - [ ] Function or gRPC to sync directories and and file lists with DB
 - [ ] Implement RAID system

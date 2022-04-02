@@ -37,7 +37,7 @@ func (fileHandler *FileHandler) create(dst string) (httpStatusCode, error) {
 // param 'src' denotes source directory of downloading file.
 //
 // example params: fileName="helloFile.txt", src="storage/users/USER_NAME/"
-func (fileHander *FileHandler) read(fileName string, src string) (httpStatusCode, error) {
+func (fileHandler *FileHandler) checkExist(fileName string, src string) (httpStatusCode, error) {
 	filePath := strings.Join([]string{src, fileName}, "")
 	log.Println(filePath)
 
@@ -52,6 +52,16 @@ func update() {
 
 }
 
-func delete() {
+func (fileHandler *FileHandler) delete(fileName string, src string) (httpStatusCode, error) {
+	filePath := strings.Join([]string{src, fileName}, "")
+	log.Println(filePath)
 
+	httpStatusCode, err := fileHandler.checkExist(fileName, src)
+
+	if httpStatusCode == http.StatusOK {
+		os.Remove(filePath)
+		return httpStatusCode, nil
+	} else {
+		return httpStatusCode, err
+	}
 }

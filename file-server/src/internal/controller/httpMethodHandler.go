@@ -2,11 +2,18 @@ package controller
 
 import (
 	"fmt"
-	"log"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
+
+var readableType = map[string]bool{
+	"txt": true,
+	"png": true,
+	"gif": true,
+	"pdf": true,
+}
 
 func SetupRouter() *gin.Engine {
 	router := gin.Default()
@@ -42,35 +49,63 @@ func SetupRouter() *gin.Engine {
 		}
 	})
 
+	// Download file from storage
 	router.GET("/download/:UUID/:filename", func(c *gin.Context) {
 		fileHandler := FileHandler{c}
 		src := "./storage/" + c.Param("UUID") + "/"
 		fileName := c.Param("filename")
 
-		// If filename is "" then return bad request code
-		log.Println(src)
-		log.Println(fileName)
-		log.Println(src + fileName)
-
-		httpStatusCode, err := fileHandler.read(fileName, src)
+		httpStatusCode, err := fileHandler.checkExist(fileName, src)
 
 		if err != nil {
 			log := fmt.Sprintf("%s does not exists. Please check your file name again. \n", fileName)
 			c.String(int(httpStatusCode), log)
 		} else {
-			//log := fmt.Sprintf("%s exists. \n", fileName)
-
-			/*
-				c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fileName))
-				c.Header("Content-Type", "application/octet-stream")
-				c.Header("Content-Length", "1024")
-			*/
 			c.Writer.WriteHeader(int(httpStatusCode))
 			// These headers prevent corrupting extension
 			// Also, these headers let a browser download a contents not just show on browser
 			c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fileName))
 			c.Header("Content-Type", "application/octet-stream")
 			c.File(src + fileName)
+		}
+	})
+
+	// Read file from storage and show
+	router.GET("/view/:UUID/:filename", func(c *gin.Context) {
+		fileHandler := FileHandler{c}
+		src := "./storage/" + c.Param("UUID") + "/"
+		fileName := c.Param("filename")
+		fileExtension := fileName[strings.LastIndex(fileName, ".")+1:]
+
+		httpStatusCode, err := fileHandler.checkExist(fileName, src)
+
+		if err != nil {
+			log := fmt.Sprintf("%s does not exists. Please check your file name again. \n", fileName)
+			c.String(int(httpStatusCode), log)
+		} else {
+			if !readableType[fileExtension] {
+				log := fmt.Sprintf("%s exists, but browser cannot open up this file extension. Please download this file \n", fileName)
+				c.String(int(httpStatusCode), log)
+			} else {
+				c.Writer.WriteHeader(int(httpStatusCode))
+				c.File(src + fileName)
+			}
+		}
+	})
+
+	router.DELETE("/view/:UUID/:filename", func(c *gin.Context) {
+		fileHandler := FileHandler{c}
+		src := "./storage/" + c.Param("UUID") + "/"
+		fileName := c.Param("filename")
+
+		httpStatusCode, err := fileHandler.delete(fileName, src)
+
+		if err != nil {
+			log := fmt.Sprintf("%s does not exists. Please check your file name again. \n", fileName)
+			c.String(int(httpStatusCode), log)
+		} else {
+			log := fmt.Sprintf("%s is deleted.", fileName)
+			c.String(int(httpStatusCode), log)
 		}
 
 	})

@@ -5,10 +5,10 @@ curl -X POST http://172.32.0.1:9010/upload \
 curl -X GET http://172.32.0.1:9010/ping
 
 curl -X POST http://172.32.0.1:9010/upload/kim \
-  -F "file=@helloworld.txt" \
+  -F "file=@testResource/helloworld.txt" \
   -H "Content-Type: multipart/form-data"
   
-curl -X POST http://172.32.0.1:9010/upload/kim -F "file=@helloworld.txt" -H "Content-Type: multipart/form-data"
+curl -X POST http://172.32.0.1:9010/upload/kim -F "file=@testResource/helloworld.txt" -H "Content-Type: multipart/form-data"
 
 curl -X GET http://172.32.0.1:9010/download/kim?filename=helloworld.txt
 
@@ -29,3 +29,6 @@ http://localhost:9010/download/kim/lenna.png
 
 http://localhost:9010/download/kim/?filename=lenna.png
 http://172.32.0.1:9010/download/kim/?filename=lenna.png
+
+curl -X DELETE http://172.32.0.1:9010/view/kim/helloworld.txt
+curl -X POST 

@@ -1,4 +1,24 @@
 # Golang file server
+Golang file server is implemented to present a kind of file system based on web.
+
+For example http curl commands, please read `testCommandtxt.txt`
+
+## TODO list
+Below list TODO list are in a queue of next implementation.
+
+- [x] Implement minimum viable CRD(Create, Read, Delete)
+  - [ ] Define update  
+    - Option 1: preserve previous version of file, like IPFS (InterPlanetary file system)
+    - Option 2: Remove previous version of file and upload new file
+- [ ] Design file system
+  - [ ] Define UUID(Universally Unique IDentifier) generator
+  - [ ] Change URI to suitable URI, which follows file system design
+- [ ] Function or gRPC to sync directories and and file lists with DB
+- [ ] Implement RAID system
+- [ ] Implement Clustering and consensus algorithm, such as RAFT
+
+
+## Environment
 Environment of docker:
 ```
 SERVER_ADDRESS="172.32.0.1"

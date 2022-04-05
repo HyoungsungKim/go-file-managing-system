@@ -1,0 +1,22 @@
+syntax="proto3";
+
+option go_package = "fileServer.com/src/api/v1";
+
+message FileInfo {
+    string fileName = 1;
+    string filePath = 2;
+}
+
+message FileStreamRequest {
+    bytes chunkData = 1;
+}
+
+message Ack {
+    uint32 ackStatusCode = 1;
+    string ackStatusMessage = 2;
+}
+
+service FileStreamService {
+    rpc SendFileInfo(stream FileInfo) returns (Ack);
+    rpc StreamFile(stream FileStreamRequest) returns (Ack);
+}

@@ -27,8 +27,5 @@ curl -X GET http://172.32.0.1:9010/download/kim/lenna.png
 
 http://localhost:9010/download/kim/lenna.png
 
-http://localhost:9010/download/kim/?filename=lenna.png
-http://172.32.0.1:9010/download/kim/?filename=lenna.png
-
 curl -X DELETE http://172.32.0.1:9010/view/kim/helloworld.txt
 curl -X POST 

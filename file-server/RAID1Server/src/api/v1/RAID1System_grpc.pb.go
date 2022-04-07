@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type FileStreamServiceClient interface {
 	SendFileInfo(ctx context.Context, opts ...grpc.CallOption) (FileStreamService_SendFileInfoClient, error)
 	StreamFile(ctx context.Context, opts ...grpc.CallOption) (FileStreamService_StreamFileClient, error)
+	DeleteFile(ctx context.Context, opts ...grpc.CallOption) (FileStreamService_DeleteFileClient, error)
 }
 
 type fileStreamServiceClient struct {
@@ -102,12 +103,47 @@ func (x *fileStreamServiceStreamFileClient) CloseAndRecv() (*Ack, error) {
 	return m, nil
 }
 
+func (c *fileStreamServiceClient) DeleteFile(ctx context.Context, opts ...grpc.CallOption) (FileStreamService_DeleteFileClient, error) {
+	stream, err := c.cc.NewStream(ctx, &FileStreamService_ServiceDesc.Streams[2], "/FileStreamService/DeleteFile", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &fileStreamServiceDeleteFileClient{stream}
+	return x, nil
+}
+
+type FileStreamService_DeleteFileClient interface {
+	Send(*DeleteFileSignal) error
+	CloseAndRecv() (*Ack, error)
+	grpc.ClientStream
+}
+
+type fileStreamServiceDeleteFileClient struct {
+	grpc.ClientStream
+}
+
+func (x *fileStreamServiceDeleteFileClient) Send(m *DeleteFileSignal) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *fileStreamServiceDeleteFileClient) CloseAndRecv() (*Ack, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(Ack)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // FileStreamServiceServer is the server API for FileStreamService service.
 // All implementations must embed UnimplementedFileStreamServiceServer
 // for forward compatibility
 type FileStreamServiceServer interface {
 	SendFileInfo(FileStreamService_SendFileInfoServer) error
 	StreamFile(FileStreamService_StreamFileServer) error
+	DeleteFile(FileStreamService_DeleteFileServer) error
 	mustEmbedUnimplementedFileStreamServiceServer()
 }
 
@@ -120,6 +156,9 @@ func (UnimplementedFileStreamServiceServer) SendFileInfo(FileStreamService_SendF
 }
 func (UnimplementedFileStreamServiceServer) StreamFile(FileStreamService_StreamFileServer) error {
 	return status.Errorf(codes.Unimplemented, "method StreamFile not implemented")
+}
+func (UnimplementedFileStreamServiceServer) DeleteFile(FileStreamService_DeleteFileServer) error {
+	return status.Errorf(codes.Unimplemented, "method DeleteFile not implemented")
 }
 func (UnimplementedFileStreamServiceServer) mustEmbedUnimplementedFileStreamServiceServer() {}
 
@@ -186,6 +225,32 @@ func (x *fileStreamServiceStreamFileServer) Recv() (*FileStreamRequest, error) {
 	return m, nil
 }
 
+func _FileStreamService_DeleteFile_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(FileStreamServiceServer).DeleteFile(&fileStreamServiceDeleteFileServer{stream})
+}
+
+type FileStreamService_DeleteFileServer interface {
+	SendAndClose(*Ack) error
+	Recv() (*DeleteFileSignal, error)
+	grpc.ServerStream
+}
+
+type fileStreamServiceDeleteFileServer struct {
+	grpc.ServerStream
+}
+
+func (x *fileStreamServiceDeleteFileServer) SendAndClose(m *Ack) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *fileStreamServiceDeleteFileServer) Recv() (*DeleteFileSignal, error) {
+	m := new(DeleteFileSignal)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // FileStreamService_ServiceDesc is the grpc.ServiceDesc for FileStreamService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -202,6 +267,11 @@ var FileStreamService_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "StreamFile",
 			Handler:       _FileStreamService_StreamFile_Handler,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "DeleteFile",
+			Handler:       _FileStreamService_DeleteFile_Handler,
 			ClientStreams: true,
 		},
 	},

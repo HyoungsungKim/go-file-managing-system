@@ -33,6 +33,10 @@ message FileStreamRequest {
     bytes chunkData = 1;
 }
 
+message DeleteFileSignal {
+    bool deleteFileSignal = 1;
+}
+
 /*
     message Ack is defined to give a acknowledge to server from client.
     When RAID1 server gets a Fileinfo or FileStreamRequest message, 
@@ -48,4 +52,5 @@ message Ack {
 service FileStreamService {
     rpc SendFileInfo(stream FileInfo) returns (Ack);
     rpc StreamFile(stream FileStreamRequest) returns (Ack);
+    rpc DeleteFile(stream DeleteFileSignal) returns (Ack);
 }

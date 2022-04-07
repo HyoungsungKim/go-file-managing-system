@@ -125,3 +125,44 @@ func (c Client) StreamFile(ctx context.Context, root string, dirId string, fileN
 	res, err := fileStream.CloseAndRecv()
 	return res, err
 }
+
+func (c Client) DeleteFile(ctx context.Context, root string, dirId string, fileName string) (*v1.Ack, error) {
+	ctx, cancel := context.WithDeadline(ctx, time.Now().Add(30*time.Second))
+	defer cancel()
+
+	deleteFileSignal, err := c.client.DeleteFile(ctx)
+	if err != nil {
+		log.Println(err)
+
+		return &v1.Ack{
+			AckStatusCode:    ackStatusBadRequest,
+			AckStatusMessage: "gRPC error",
+		}, err
+	}
+
+	log.Println("File path is", dirId+"/"+fileName)
+	_, err = os.Open(root + "/" + dirId + "/" + fileName)
+	if err != nil {
+		log.Println(err)
+
+		return &v1.Ack{
+			AckStatusCode:    ackStatusBadRequest,
+			AckStatusMessage: "File does not exists",
+		}, err
+	}
+
+	if err := deleteFileSignal.Send(&v1.DeleteFileSignal{
+		DeleteFileSignal: true,
+	}); err != nil {
+		log.Println(err)
+
+		return &v1.Ack{
+			AckStatusCode:    ackStatusBadRequest,
+			AckStatusMessage: "Fail to excute gRCP `DeleteFileSignal`",
+		}, err
+	}
+
+	res, err := deleteFileSignal.CloseAndRecv()
+
+	return res, err
+}

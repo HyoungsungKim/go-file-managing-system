@@ -1,16 +1,49 @@
+/*
+    RAID1System.proto includes rpc to run RAID1 system.
+    When client send a file to filer server, file server send file to RAID1 server using gRPC.
+*/
+
 syntax="proto3";
 
 option go_package = "fileServer.com/src/api/v1";
 
+/* 
+    message FileInfo gives a file directory of file, which is stored in the File server.
+    - message FileInfo includes two filelds: fileName, filePath.
+    - Using these fields, RAID1 server has same URI of file, which is stored in file server.
+
+    Assume file is stored in `./storage/:dirID/fileName`, 
+    fileName field denotes, `fileName` of fileName,
+    filePath field denotes, `:dirID`.
+
+    For example, if `helloworld.txt` is stored in './storage/ZGlyMS9kaXIyL2RpcjM=/helloworld.txt
+    fileName field is `helloworld.txt`, filePath field is `ZGlyMS9kaXIyL2RpcjM=`
+    message FileInfo does not includes root directory, such as `./storage`, beucase root directory of RAID1 server is not guranteeded.
+*/
 message FileInfo {
     string fileName = 1;
     string filePath = 2;
 }
 
+/*
+    message FileStreamRequest has a chunkData field, which is used for streaming file.
+    Files are streamed by message FileStreamRequest
+*/
 message FileStreamRequest {
     bytes chunkData = 1;
 }
 
+message DeleteFileSignal {
+    bool deleteFileSignal = 1;
+}
+
+/*
+    message Ack is defined to give a acknowledge to server from client.
+    When RAID1 server gets a Fileinfo or FileStreamRequest message, 
+    RAID1 server send back message ACK to server.
+    
+    field ackStatusCode has same status code of http status code
+*/
 message Ack {
     uint32 ackStatusCode = 1;
     string ackStatusMessage = 2;
@@ -19,4 +52,5 @@ message Ack {
 service FileStreamService {
     rpc SendFileInfo(stream FileInfo) returns (Ack);
     rpc StreamFile(stream FileStreamRequest) returns (Ack);
+    rpc DeleteFile(stream DeleteFileSignal) returns (Ack);
 }

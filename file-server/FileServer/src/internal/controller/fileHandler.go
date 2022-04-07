@@ -76,16 +76,28 @@ func update() {
 
 }
 
-func (fileHandler *FileHandler) delete(fileName string, src string) (httpStatusCode, error) {
+func (fileHandler *FileHandler) delete(root string, dirId string, fileName string, gRPCHandler *gRPCHandler.Client) (httpStatusCode, error) {
+	src := root + "/" + dirId + "/"
 	filePath := strings.Join([]string{src, fileName}, "")
 	log.Println(filePath)
 
-	httpStatusCode, err := fileHandler.checkExist(fileName, src)
+	statusCode, err := fileHandler.checkExist(fileName, src)
 
-	if httpStatusCode == http.StatusOK {
-		os.Remove(filePath)
-		return httpStatusCode, nil
-	} else {
-		return httpStatusCode, err
+	if statusCode == http.StatusOK {
+		if ack, err := gRPCHandler.SendFileInfo(context.Background(), dirId, fileName); err != nil {
+			return httpStatusCode(ack.AckStatusCode), errors.New(ack.AckStatusMessage)
+		} else {
+			log.Println(ack.AckStatusCode, ack.AckStatusMessage)
+		}
+
+		if ack, err := gRPCHandler.DeleteFile(context.Background(), root, dirId, fileName); err != nil {
+			log.Println(ack.AckStatusCode)
+			log.Println(ack.AckStatusMessage)
+			return httpStatusCode(ack.AckStatusCode), errors.New(ack.AckStatusMessage)
+		} else {
+			os.Remove(filePath)
+			return statusCode, nil
+		}
 	}
+	return statusCode, err
 }

@@ -108,10 +108,10 @@ func SetupRouter() *gin.Engine {
 
 	router.DELETE("/view/:dirID/:filename", func(c *gin.Context) {
 		fileHandler := FileHandler{c}
-		src := root + "/" + c.Param("dirID") + "/"
+		dirId := c.Param("dirID")
 		fileName := c.Param("filename")
 
-		httpStatusCode, err := fileHandler.delete(fileName, src)
+		httpStatusCode, err := fileHandler.delete(root, dirId, fileName, &client)
 
 		if err != nil {
 			log := fmt.Sprintf("%s does not exists. Please check your file name again. \n", fileName)

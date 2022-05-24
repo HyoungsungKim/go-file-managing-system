@@ -31,15 +31,14 @@ func SetupRouter() *gin.Engine {
 
 	client := gRPCHandler.NewClient(conn)
 
-	/* Check server is connected
+	// Check server is connected
 	router.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "pong",
 		})
 	})
-	*/
 
-	router.GET("/uploadpage", func(c *gin.Context) {
+	router.GET("/upload", func(c *gin.Context) {
 		title := "upload single file"
 		c.HTML(http.StatusOK, "index.html", gin.H{
 			"page": title,

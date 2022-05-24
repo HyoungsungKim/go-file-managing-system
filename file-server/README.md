@@ -10,14 +10,13 @@ Below list TODO list are in a queue of next implementation.
   - [ ] Define update  
     - Option 1: Preserve previous version of file, like IPFS (InterPlanetary file system)
     - Option 2: Remove previous version of file and upload new file
-- [ ] Design file system
-  - [X] Define dirID generator  
-    (e.g., storage/a/b/c/helloworld.txt -> storage/dirID/helloworld.txt, preserve an actual file directory in DB)
-  - [ ] Change URI to suitable URI, which follows file system design
+- [X] Define dirID generator  
+  (e.g., storage/a/b/c/helloworld.txt -> storage/dirID/helloworld.txt, preserve an actual file directory in DB)
+- [X] Change URI to suitable URI, which follows file system design
 - [ ] Function or gRPC to sync directories and and file lists with DB
-- [ ] Implement RAID system
+- [X] Implement RAID system using gRPC
   - [X] Upload
-  - [ ] Delete 
+  - [X] Delete 
 - [ ] Implement Clustering and consensus algorithm, such as RAFT
 
 

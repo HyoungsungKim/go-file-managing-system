@@ -1,24 +1,84 @@
 version: "3.7"
 
 services:
-  go:
+  client:
+    build: ./client/.
+    networks:
+      fileserver_network:
+        ipv4_address: 172.32.0.3
+      db_network:
+        ipv4_address: 172.30.0.3
+    ports:
+      - 3000:3000
+    working_dir: /app
+
+    volumes:
+      - ./client:/app
+    stdin_open: true
+    tty: true
+
+  go-file-server:
     #image: golang:alpine
     build: ./file-server/.
     networks:
       fileserver_network:
         ipv4_address: 172.32.0.1
     ports:
-      - 127.0.0.1:9010:9010
-      - 50051:50051
+      #- 127.0.0.1:9010:9010
+      - 9010:9010
     working_dir: /app
     environment:
       SERVER_ADDRESS: 172.32.0.1
-      SERVER_PORT: 9010
       
     volumes:
-      - ./:/app
+      - ./file-db:/app
     stdin_open: true
     tty: true
+
+  go-db-server:
+    #image: golang:alpine
+    build: ./file-db/. #./file-server/.
+    networks:
+      db_network:
+        ipv4_address: 172.30.0.1
+    ports:
+      - 50051:50051
+      - 8090:8090
+    working_dir: /app
+    environment:
+      DB_PORT: 5432
+      DB_ADDRESS: 172.30.0.2
+      
+    volumes:
+      - ./file-server:/app
+    stdin_open: true
+    tty: true
+
+  postgres:
+    image: postgres:alpine
+    networks:
+      db_network:
+        ipv4_address: 172.30.0.2
+    ports:
+      - 5432:5432
+    env_file:
+      - .postgres_env
+    volumes:
+      - ./file-db/db:/app/db
+
+  pgadmin:
+    image: dpage/pgadmin4
+    depends_on:
+      - postgres
+    networks:
+      - db_network
+    ports:
+      - 5433:80
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@dev.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    volumes:
+      - ./file-db/pgadmin:/app/pgadmin
 
 networks:
   fileserver_network:
@@ -26,3 +86,9 @@ networks:
       config:
         - gateway: 172.32.1.1
           subnet: 172.32.0.0/16
+  db_network:
+    ipam:
+      config:
+        - gateway: 172.30.1.1
+          subnet: 172.30.0.0/16
+

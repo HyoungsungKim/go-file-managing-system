@@ -1,0 +1,12 @@
+FROM alpine
+
+RUN apk add git
+RUN apk add --update alpine-sdk
+
+RUN apk add nodejs && apk add npm 
+RUN npm add install -g yarn
+
+RUN yarn global add typescript && yarn global add ts-node
+
+WORKDIR /app
+RUN yarn add create-react-app

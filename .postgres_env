@@ -1,0 +1,6 @@
+POSTGRES_USER = "dev_db"
+POSTGRES_PASSWORD = "dev_db"
+POSTGRES_DB = "default_database"
+
+DB_ADDRES = "172.30.0.1"
+DB_PORT = "5432"

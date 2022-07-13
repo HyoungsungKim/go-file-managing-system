@@ -31,7 +31,7 @@ services:
       SERVER_ADDRESS: 172.32.0.1
       
     volumes:
-      - ./file-db:/app
+      - ./file-server:/app
     stdin_open: true
     tty: true
 
@@ -50,7 +50,7 @@ services:
       DB_ADDRESS: 172.30.0.2
       
     volumes:
-      - ./file-server:/app
+      - ./file-db:/app
     stdin_open: true
     tty: true
 

@@ -5,9 +5,9 @@ services:
     build: ./client/.
     networks:
       fileserver_network:
-        ipv4_address: 172.32.0.3
+        ipv4_address: 172.32.0.4
       db_network:
-        ipv4_address: 172.30.0.3
+        ipv4_address: 172.30.0.4
     ports:
       - 3000:3000
     working_dir: /app
@@ -21,6 +21,8 @@ services:
     #image: golang:alpine
     build: ./file-server/.
     networks:
+      db_network:
+        ipv4_address: 172.30.0.3
       fileserver_network:
         ipv4_address: 172.32.0.1
     ports:
@@ -41,6 +43,8 @@ services:
     networks:
       db_network:
         ipv4_address: 172.30.0.1
+      fileserver_network:
+        ipv4_address: 172.32.0.3
     ports:
       - 50051:50051
       - 8090:8090

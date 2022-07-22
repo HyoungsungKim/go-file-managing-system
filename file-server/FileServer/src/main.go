@@ -20,7 +20,7 @@ func main() {
 	)
 
 	router := controller.SetupRouter()
-	router.LoadHTMLGlob("../templates/*")
+	//router.LoadHTMLGlob("../templates/*")
 	router.MaxMultipartMemory = 8 << 20
 	fString := fmt.Sprintf("%s:%s", SERVER_ADDRESS, SERVER_PORT)
 	println("Listening on http://" + fString)

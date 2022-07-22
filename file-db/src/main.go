@@ -5,6 +5,7 @@ import (
 
 	"fileDB.com/src/internal/controller/APIv1"
 	dbHandler "fileDB.com/src/internal/controller/DBHandler"
+	"github.com/gin-gonic/contrib/static"
 )
 
 func main() {
@@ -15,7 +16,11 @@ func main() {
 	db := dbHandler.ConnectDB()
 	router := APIv1.SetupRouter(db)
 
-	router.LoadHTMLGlob("../testClient/*")
+	//router := gin.Default()
+	router.Use(static.Serve("/", static.LocalFile("./internal/view/build", true)))
+
+	//router.LoadHTMLGlob("../testClient/*")
+	//router.LoadHTMLGlob("./internal/view/pages/*")
 	router.MaxMultipartMemory = 8 << 20
 
 	fString := fmt.Sprintf("%s:%s", DB_SERVER_ADDRESS, DB_SERVER_PORT)

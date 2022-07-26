@@ -39,13 +39,17 @@ func (fileHandler *FileHandler) checkExist(fileName string, src string) (httpSta
 func (fileHandler *FileHandler) create(root string, dirId string, gRPCHandler *gRPCHandler.Client) (httpStatusCode, error) {
 	dst := root + "/" + dirId + "/"
 	file, _ := fileHandler.FormFile("file")
+
 	filePath := strings.Join([]string{dst, file.Filename}, "")
+	log.Println(dst)
 	log.Println(filePath)
 
 	// If dst directory does not exits, generate
 	if _, err := os.Stat(filePath); err == nil {
 		return http.StatusBadRequest, errors.New("THIS FILE NAME ALREADY EXISTS")
 	} else {
+		log.Println("There is no directory. Generate new direcory")
+		log.Println(dst)
 		os.Mkdir(dst, os.ModePerm)
 	}
 
@@ -55,6 +59,7 @@ func (fileHandler *FileHandler) create(root string, dirId string, gRPCHandler *g
 
 		// Execute gRPC to send a file to RAID1 server
 		// Send file info to RAID1 server
+		log.Println("Sending file info to RAID1 server...")
 		if ack, err := gRPCHandler.SendFileInfo(context.Background(), dirId, file.Filename); err != nil {
 			return httpStatusCode(ack.AckStatusCode), errors.New(ack.AckStatusMessage)
 		} else {
@@ -62,9 +67,8 @@ func (fileHandler *FileHandler) create(root string, dirId string, gRPCHandler *g
 		}
 
 		// Send file to RAID1 server
+		log.Println("Sending file to RAID1 server...")
 		if ack, err := gRPCHandler.StreamFile(context.Background(), root, dirId, file.Filename); err != nil {
-			log.Println(ack.AckStatusCode)
-			log.Println(ack.AckStatusMessage)
 			return httpStatusCode(ack.AckStatusCode), errors.New(ack.AckStatusMessage)
 		} else {
 			return http.StatusOK, nil

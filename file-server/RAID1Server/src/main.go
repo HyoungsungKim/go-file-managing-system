@@ -19,7 +19,7 @@ func main() {
 
 	defer lis.Close()
 
-	upSrv := fileStreamer.NewServer(storage.New("./storage/"))
+	upSrv := fileStreamer.NewServer(storage.New("../storage/"))
 	rpcSrv := grpc.NewServer()
 
 	v1.RegisterFileStreamServiceServer(rpcSrv, upSrv)

@@ -5,9 +5,11 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"fileServer.com/FileServer/src/internal/gRPCHandler"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -22,8 +24,17 @@ var readableType = map[string]bool{
 
 func SetupRouter() *gin.Engine {
 	router := gin.Default()
+	// CORS access
+	router.Use(cors.New(
+		cors.Config{
+			AllowOrigins: []string{"http://localhost:3010", "http://172.30.0.1:8090"},
+			AllowMethods: []string{"GET", "POST"},
+			MaxAge:       12 * time.Hour,
+		},
+	))
+
 	conn, err := grpc.Dial(":50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
-	root := "./storage"
+	root := "../storage"
 	if err != nil {
 		log.Fatalln(err)
 	}

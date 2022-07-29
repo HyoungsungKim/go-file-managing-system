@@ -1,7 +1,10 @@
 package utils
 
 type UploadFormat struct {
-	UserId      string
-	Title       string
-	Description string
+	AccountID string
+	FileName  string
+	Signature string
+	Type      string
+	URI       string
+	Size      float64
 }

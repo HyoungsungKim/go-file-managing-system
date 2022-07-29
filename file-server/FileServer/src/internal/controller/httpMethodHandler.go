@@ -20,6 +20,8 @@ var readableType = map[string]bool{
 	"png": true,
 	"gif": true,
 	"pdf": true,
+	"mp3": true,
+	"wmv": true,
 }
 
 func SetupRouter() *gin.Engine {
@@ -56,14 +58,14 @@ func SetupRouter() *gin.Engine {
 		})
 	})
 
-	// upload file to dirID. dirID denotes directory
+	// Upload file to dirID. dirID denotes directory
 	// For example, storage/1v5bor...0B/`FILE_NAME`
 	router.POST("/upload/:dirID", func(c *gin.Context) {
 		fileHandler := FileHandler{c}
-		dirId := c.Param("dirID")
+		dirID := c.Param("dirID")
 
 		// type of httpStatusCode is int
-		httpStatusCode, err := fileHandler.create(root, dirId, &client)
+		httpStatusCode, err := fileHandler.create(root, dirID, &client)
 
 		if err != nil {
 			c.String(int(httpStatusCode), fmt.Sprintf("Status code: %d, Upload file err: %s\n", int(httpStatusCode), err.Error()))

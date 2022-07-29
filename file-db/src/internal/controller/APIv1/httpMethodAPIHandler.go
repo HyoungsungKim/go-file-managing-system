@@ -30,6 +30,7 @@ func SetupRouter(db *sql.DB) *gin.Engine {
 
 	v1 := router.Group("/")
 	uploadGroup(db, v1.Group("/upload"))
+	viewGroup(db, v1.Group("/view"))
 
 	return router
 }
@@ -52,18 +53,74 @@ func uploadGroup(db *sql.DB, router *gin.RouterGroup) {
 		var data map[string]interface{}
 		json.Unmarshal([]byte(value), &data)
 		c.JSON(http.StatusOK, gin.H{
-			"userId":      data["userId"],
-			"title":       data["age"],
-			"description": data["description"],
+			"account_id": data["account_id"],
+			"file_name":  data["file_name"],
+			"signature":  data["signature"],
+			"type":       data["type"],
+			"URI":        data["URI"],
+			"size":       data["size"],
 		})
 		fmt.Println(data)
 		doc, _ := json.Marshal(data)
 		fmt.Println(string(doc))
 
-		uploadData := utils.UploadFormat{UserId: data["userId"].(string), Title: data["title"].(string), Description: data["description"].(string)}
+		uploadData := utils.UploadFormat{
+			AccountID: data["account_id"].(string),
+			FileName:  data["file_name"].(string),
+			Signature: data["signature"].(string),
+			Type:      data["type"].(string),
+			URI:       data["URI"].(string),
+			Size:      data["size"].(float64),
+		}
 
 		DBHandler.Upload(db, uploadData)
 
 		c.String(http.StatusOK, string(doc))
+	})
+}
+
+func viewGroup(db *sql.DB, router *gin.RouterGroup) {
+	type ImageList struct {
+		AccountID string   `json:"account_id"`
+		Signature string   `json:"signature"`
+		FileName  []string `json:"file_name"`
+		URI       []string `json:"URI"`
+		Type      []string `json:"type"`
+	}
+
+	router.GET("/:accountID", func(c *gin.Context) {
+		var imageList ImageList
+		var signature string
+		accountID := c.Param("accountID")
+		imageList.AccountID = accountID
+
+		rows := DBHandler.ViewImages(db, accountID)
+		defer rows.Close()
+
+		for rows.Next() {
+			var uploadedFormat utils.UploadFormat
+			if err := rows.Scan(
+				&uploadedFormat.AccountID,
+				&uploadedFormat.FileName,
+				&uploadedFormat.Signature,
+				&uploadedFormat.Type,
+				&uploadedFormat.URI,
+				&uploadedFormat.Size,
+			); err != nil {
+				panic(err)
+			}
+			signature = uploadedFormat.Signature
+			imageList.FileName = append(imageList.FileName, uploadedFormat.FileName)
+			imageList.URI = append(imageList.URI, uploadedFormat.URI)
+			imageList.Type = append(imageList.Type, uploadedFormat.Type)
+		}
+		imageList.Signature = signature
+		/*
+			jsonImageList, err := json.Marshal(imageList)
+			if err != nil {
+				panic(err)
+			}
+		*/
+		c.JSON(http.StatusOK, imageList)
 	})
 }

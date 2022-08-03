@@ -96,7 +96,7 @@ func SetupRouter() *gin.Engine {
 	})
 
 	// Read file from storage and show
-	router.GET("/view/:dirID/:filename", func(c *gin.Context) {
+	router.GET("/collection/:dirID/:filename", func(c *gin.Context) {
 		fileHandler := FileHandler{c}
 		src := root + "/" + c.Param("dirID") + "/"
 		fileName := c.Param("filename")
@@ -118,7 +118,7 @@ func SetupRouter() *gin.Engine {
 		}
 	})
 
-	router.DELETE("/view/:dirID/:filename", func(c *gin.Context) {
+	router.DELETE("/collection/:dirID/:filename", func(c *gin.Context) {
 		fileHandler := FileHandler{c}
 		dirId := c.Param("dirID")
 		fileName := c.Param("filename")

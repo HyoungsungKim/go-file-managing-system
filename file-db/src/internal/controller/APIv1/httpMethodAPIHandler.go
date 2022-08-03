@@ -30,7 +30,7 @@ func SetupRouter(db *sql.DB) *gin.Engine {
 
 	v1 := router.Group("/")
 	uploadGroup(db, v1.Group("/upload"))
-	viewGroup(db, v1.Group("/view"))
+	collectionGroup(db, v1.Group("/collection"))
 
 	return router
 }
@@ -79,7 +79,7 @@ func uploadGroup(db *sql.DB, router *gin.RouterGroup) {
 	})
 }
 
-func viewGroup(db *sql.DB, router *gin.RouterGroup) {
+func collectionGroup(db *sql.DB, router *gin.RouterGroup) {
 	type ImageList struct {
 		AccountID string   `json:"account_id"`
 		Signature string   `json:"signature"`
@@ -121,6 +121,7 @@ func viewGroup(db *sql.DB, router *gin.RouterGroup) {
 				panic(err)
 			}
 		*/
+		//log.Print(imageList)
 		c.JSON(http.StatusOK, imageList)
 	})
 }

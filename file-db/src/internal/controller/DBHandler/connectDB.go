@@ -34,7 +34,7 @@ func ConnectDB() *sql.DB {
 	fmt.Println("Connected!")
 	fmt.Println("Checking tables...")
 
-	//resetDB(db)
+	resetDB(db)
 	generateTables(db)
 
 	return db

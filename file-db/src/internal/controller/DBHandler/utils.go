@@ -11,7 +11,7 @@ func generateTables(db *sql.DB) {
 
 func createaMetadataTable(db *sql.DB) {
 	createStmt := `create table IF NOT EXISTS "metadata" (
-		account_id 	text Primary key,
+		account_id 	text,
 		file_name 	text,
 		signature	text,
 		type 		text,

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 
 	"fileDB.com/src/internal/controller/DBHandler"
 	"fileDB.com/src/internal/controller/utils"
@@ -14,6 +16,7 @@ import (
 
 func SetupRouter(db *sql.DB) *gin.Engine {
 	router := gin.Default()
+	router.NoRoute(ReverseProxy)
 
 	router.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -35,14 +38,24 @@ func SetupRouter(db *sql.DB) *gin.Engine {
 	return router
 }
 
-func uploadGroup(db *sql.DB, router *gin.RouterGroup) {
-	router.GET("/", func(c *gin.Context) {
-		title := "upload test page"
-		c.HTML(http.StatusOK, "upload.html", gin.H{
-			"page": title,
-		})
-	})
+func ReverseProxy(c *gin.Context) {
+	//https://story.tomasen.org/a-better-practice-mixing-gin-with-next-js-and-nextauth-on-the-side-4f9d1fb9e486
 
+	remote, _ := url.Parse("http://localhost:3000")
+
+	proxy := httputil.NewSingleHostReverseProxy(remote)
+	proxy.Director = func(req *http.Request) {
+		req.Header = c.Request.Header
+		req.Host = remote.Host
+		req.URL = c.Request.URL
+		req.URL.Scheme = remote.Scheme
+		req.URL.Host = remote.Host
+	}
+
+	proxy.ServeHTTP(c.Writer, c.Request)
+}
+
+func uploadGroup(db *sql.DB, router *gin.RouterGroup) {
 	router.POST("/submit", func(c *gin.Context) {
 		body := c.Request.Body
 		value, err := ioutil.ReadAll(body)

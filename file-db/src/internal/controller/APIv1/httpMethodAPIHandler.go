@@ -8,15 +8,29 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"time"
 
 	"fileDB.com/src/internal/controller/DBHandler"
 	"fileDB.com/src/internal/controller/utils"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 func SetupRouter(db *sql.DB) *gin.Engine {
 	router := gin.Default()
 	router.NoRoute(ReverseProxy)
+
+	router.Use(cors.New(
+		cors.Config{
+			AllowOrigins: []string{
+				"http://localhost:3010",
+				"http://172.30.0.1:8090",
+				"http://172.30.0.1:3000",
+			},
+			AllowMethods: []string{"GET", "POST"},
+			MaxAge:       12 * time.Hour,
+		},
+	))
 
 	router.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{

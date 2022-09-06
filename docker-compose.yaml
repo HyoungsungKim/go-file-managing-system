@@ -1,21 +1,21 @@
 version: "3.7"
 
 services:
-  client:
-    build: ./client/.
-    networks:
-      fileserver_network:
-        ipv4_address: 172.32.0.4
-      db_network:
-        ipv4_address: 172.30.0.4
-    ports:
-      - 3000:3000
-    working_dir: /app
+  # client:
+  #   build: ./client/.
+  #   networks:
+  #     fileserver_network:
+  #       ipv4_address: 172.32.0.4
+  #     db_network:
+  #       ipv4_address: 172.30.0.4
+  #   ports:
+  #     - 3000:3000
+  #   working_dir: /app
 
-    volumes:
-      - ./client:/app
-    stdin_open: true
-    tty: true
+  #   volumes:
+  #     - ./client:/app
+  #   stdin_open: true
+  #   tty: true
 
   go-file-server:
     #image: golang:alpine

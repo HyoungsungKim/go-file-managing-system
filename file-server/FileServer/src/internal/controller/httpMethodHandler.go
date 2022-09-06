@@ -30,6 +30,7 @@ func SetupRouter() *gin.Engine {
 	router.Use(cors.New(
 		cors.Config{
 			AllowOrigins: []string{
+				"http://localhost:3001", // for dev
 				"http://localhost:3010",
 				"http://172.30.0.1:8090",
 				"http://172.30.0.1:3000",
@@ -63,8 +64,25 @@ func SetupRouter() *gin.Engine {
 	})
 
 	// Upload file to dirID. dirID denotes directory
+	// root/accountID/FILE_NAME
 	// For example, storage/1v5bor...0B/`FILE_NAME`
 	router.POST("/upload/:dirID", func(c *gin.Context) {
+		fileHandler := FileHandler{c}
+		dirID := c.Param("dirID")
+
+		// type of httpStatusCode is int
+		httpStatusCode, err := fileHandler.create(root, dirID, &client)
+
+		if err != nil {
+			c.String(int(httpStatusCode), fmt.Sprintf("Status code: %d, Upload file err: %s\n", int(httpStatusCode), err.Error()))
+		} else {
+			c.String(int(httpStatusCode), fmt.Sprintf("Status code: %d, File is uploaded!\n", int(httpStatusCode)))
+		}
+	})
+
+	// Upload metadata file to dirID.
+	router.POST("/upload/:dirID/metadata", func(c *gin.Context) {
+
 		fileHandler := FileHandler{c}
 		dirID := c.Param("dirID")
 

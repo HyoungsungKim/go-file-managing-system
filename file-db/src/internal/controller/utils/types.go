@@ -6,5 +6,6 @@ type UploadFormat struct {
 	Signature string
 	Type      string
 	URI       string
-	Size      float64
+	NFTtitle  string
+	Copyright string
 }

@@ -85,7 +85,8 @@ func uploadGroup(db *sql.DB, router *gin.RouterGroup) {
 			"signature":  data["signature"],
 			"type":       data["type"],
 			"URI":        data["URI"],
-			"size":       data["size"],
+			"NFTtitle":   data["NFTtitle"],
+			"Copyright":  data["Copyright"],
 		})
 		fmt.Println(data)
 		doc, _ := json.Marshal(data)
@@ -97,7 +98,8 @@ func uploadGroup(db *sql.DB, router *gin.RouterGroup) {
 			Signature: data["signature"].(string),
 			Type:      data["type"].(string),
 			URI:       data["URI"].(string),
-			Size:      data["size"].(float64),
+			NFTtitle:  data["NFTtitle"].(string),
+			Copyright: data["Copyright"].(string),
 		}
 
 		DBHandler.Upload(db, uploadData)
@@ -108,11 +110,13 @@ func uploadGroup(db *sql.DB, router *gin.RouterGroup) {
 
 func collectionGroup(db *sql.DB, router *gin.RouterGroup) {
 	type ImageList struct {
-		AccountID string   `json:"account_id"`
-		Signature string   `json:"signature"`
-		FileName  []string `json:"file_name"`
-		URI       []string `json:"URI"`
-		Type      []string `json:"type"`
+		AccountID  string   `json:"account_id"`
+		Signature  string   `json:"signature"`
+		FileNames  []string `json:"file_name"`
+		URIs       []string `json:"URI"`
+		Types      []string `json:"type"`
+		NFTtitles  []string `json:"NFTtitles"`
+		Copyrights []string `json:"copyrights"`
 	}
 
 	router.GET("/:accountID", func(c *gin.Context) {
@@ -132,14 +136,17 @@ func collectionGroup(db *sql.DB, router *gin.RouterGroup) {
 				&uploadedFormat.Signature,
 				&uploadedFormat.Type,
 				&uploadedFormat.URI,
-				&uploadedFormat.Size,
+				&uploadedFormat.NFTtitle,
+				&uploadedFormat.Copyright,
 			); err != nil {
 				panic(err)
 			}
 			signature = uploadedFormat.Signature
-			imageList.FileName = append(imageList.FileName, uploadedFormat.FileName)
-			imageList.URI = append(imageList.URI, uploadedFormat.URI)
-			imageList.Type = append(imageList.Type, uploadedFormat.Type)
+			imageList.FileNames = append(imageList.FileNames, uploadedFormat.FileName)
+			imageList.URIs = append(imageList.URIs, uploadedFormat.URI)
+			imageList.Types = append(imageList.Types, uploadedFormat.Type)
+			imageList.NFTtitles = append(imageList.NFTtitles, uploadedFormat.NFTtitle)
+			imageList.Copyrights = append(imageList.Copyrights, uploadedFormat.Copyright)
 		}
 		imageList.Signature = signature
 		/*

@@ -16,7 +16,8 @@ func createaMetadataTable(db *sql.DB) {
 		signature	text,
 		type 		text,
 		URI    		text,
-		size		integer
+		nft_title 	text,
+		copyright 	text
 	)`
 
 	_, err := db.Exec(createStmt)

@@ -17,6 +17,7 @@ func createaMetadataTable(db *sql.DB) {
 		type 		text,
 		URI    		text,
 		nft_title 	text,
+		nft_id		text,
 		copyright 	text
 	)`
 

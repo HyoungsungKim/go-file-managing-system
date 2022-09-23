@@ -48,6 +48,7 @@ func SetupRouter(db *sql.DB) *gin.Engine {
 	v1 := router.Group("/")
 	uploadGroup(db, v1.Group("/upload"))
 	collectionGroup(db, v1.Group("/collection"))
+	requestGroup(db, v1.Group("/request"))
 
 	return router
 }
@@ -86,6 +87,7 @@ func uploadGroup(db *sql.DB, router *gin.RouterGroup) {
 			"type":       data["type"],
 			"URI":        data["URI"],
 			"NFTtitle":   data["NFTtitle"],
+			"NFT_id":     data["NFT_id"],
 			"Copyright":  data["Copyright"],
 		})
 		fmt.Println(data)
@@ -99,6 +101,7 @@ func uploadGroup(db *sql.DB, router *gin.RouterGroup) {
 			Type:      data["type"].(string),
 			URI:       data["URI"].(string),
 			NFTtitle:  data["NFTtitle"].(string),
+			NFTID:     data["NFT_id"].(string),
 			Copyright: data["Copyright"].(string),
 		}
 
@@ -109,23 +112,24 @@ func uploadGroup(db *sql.DB, router *gin.RouterGroup) {
 }
 
 func collectionGroup(db *sql.DB, router *gin.RouterGroup) {
-	type ImageList struct {
+	type ImageMetadataList struct {
 		AccountID  string   `json:"account_id"`
 		Signature  string   `json:"signature"`
-		FileNames  []string `json:"file_name"`
-		URIs       []string `json:"URI"`
-		Types      []string `json:"type"`
+		FileNames  []string `json:"file_names"`
+		URIs       []string `json:"URIs"`
+		Types      []string `json:"types"`
 		NFTtitles  []string `json:"NFTtitles"`
+		NFTIDs     []string `json:"NFT_ids"`
 		Copyrights []string `json:"copyrights"`
 	}
 
 	router.GET("/:accountID", func(c *gin.Context) {
-		var imageList ImageList
+		var imageList ImageMetadataList
 		var signature string
 		accountID := c.Param("accountID")
 		imageList.AccountID = accountID
 
-		rows := DBHandler.ViewImages(db, accountID)
+		rows := DBHandler.SelectAllImages(db, accountID)
 		defer rows.Close()
 
 		for rows.Next() {
@@ -137,6 +141,7 @@ func collectionGroup(db *sql.DB, router *gin.RouterGroup) {
 				&uploadedFormat.Type,
 				&uploadedFormat.URI,
 				&uploadedFormat.NFTtitle,
+				&uploadedFormat.NFTID,
 				&uploadedFormat.Copyright,
 			); err != nil {
 				panic(err)
@@ -146,6 +151,7 @@ func collectionGroup(db *sql.DB, router *gin.RouterGroup) {
 			imageList.URIs = append(imageList.URIs, uploadedFormat.URI)
 			imageList.Types = append(imageList.Types, uploadedFormat.Type)
 			imageList.NFTtitles = append(imageList.NFTtitles, uploadedFormat.NFTtitle)
+			imageList.NFTIDs = append(imageList.NFTIDs, uploadedFormat.NFTID)
 			imageList.Copyrights = append(imageList.Copyrights, uploadedFormat.Copyright)
 		}
 		imageList.Signature = signature
@@ -157,5 +163,70 @@ func collectionGroup(db *sql.DB, router *gin.RouterGroup) {
 		*/
 		//log.Print(imageList)
 		c.JSON(http.StatusOK, imageList)
+	})
+}
+
+func requestGroup(db *sql.DB, router *gin.RouterGroup) {
+	type ImageMetadata struct {
+		AccountID string `json:"account_id"`
+		Signature string `json:"signature"`
+		FileName  string `json:"file_name"`
+		URI       string `json:"URI"`
+		Type      string `json:"type"`
+		NFTtitle  string `json:"NFTtitle"`
+		NFTID     string `json:"NFT_id"`
+		Copyright string `json:"copyright"`
+	}
+
+	router.GET("/:nftID", func(c *gin.Context) {
+		var imageMetadata ImageMetadata
+		var signature string
+		nftID := c.Param("nftID")
+		imageMetadata.NFTID = nftID
+
+		rows := DBHandler.SelectImageByNFTID(db, nftID)
+		defer rows.Close()
+
+		for rows.Next() {
+			var uploadedFormat utils.UploadFormat
+			if err := rows.Scan(
+				&uploadedFormat.AccountID,
+				&uploadedFormat.FileName,
+				&uploadedFormat.Signature,
+				&uploadedFormat.Type,
+				&uploadedFormat.URI,
+				&uploadedFormat.NFTtitle,
+				&uploadedFormat.NFTID,
+				&uploadedFormat.Copyright,
+			); err != nil {
+				panic(err)
+			}
+
+			signature = uploadedFormat.Signature
+
+			imageMetadata.AccountID = uploadedFormat.AccountID
+			imageMetadata.FileName = uploadedFormat.FileName
+			imageMetadata.URI = uploadedFormat.URI
+			imageMetadata.Type = uploadedFormat.Type
+			imageMetadata.NFTtitle = uploadedFormat.NFTtitle
+			imageMetadata.NFTID = uploadedFormat.NFTID
+			imageMetadata.Copyright = uploadedFormat.Copyright
+			imageMetadata.Signature = signature
+
+			if imageMetadata.Copyright == "unlockable content" {
+				imageMetadata.URI = "404Images/lockedContent.png"
+				imageMetadata.FileName = "locked file"
+				imageMetadata.AccountID = "locked"
+			}
+		}
+
+		/*
+			jsonImageList, err := json.Marshal(imageList)
+			if err != nil {
+				panic(err)
+			}
+		*/
+		//log.Print(imageList)
+		c.JSON(http.StatusOK, imageMetadata)
 	})
 }

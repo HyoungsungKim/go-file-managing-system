@@ -7,5 +7,6 @@ type UploadFormat struct {
 	Type      string
 	URI       string
 	NFTtitle  string
+	NFTID     string
 	Copyright string
 }

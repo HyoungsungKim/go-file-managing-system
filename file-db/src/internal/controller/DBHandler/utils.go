@@ -6,10 +6,22 @@ import (
 )
 
 func generateTables(db *sql.DB) {
-	createaMetadataTable(db)
+	createMetadataTable(db)
+	createRentalRequestTable(db)
+	createUserLogsTable(db)
 }
 
-func createaMetadataTable(db *sql.DB) {
+func createUserLogsTable(db *sql.DB) {
+	createStmt := `create table IF NOT EXISTS "user_logs" (
+		account_id 		text,
+		timestamp	 	date
+	)`
+
+	_, err := db.Exec(createStmt)
+	checkError(err, createStmt)
+}
+
+func createMetadataTable(db *sql.DB) {
 	createStmt := `create table IF NOT EXISTS "metadata" (
 		account_id 	text,
 		file_name 	text,
@@ -19,6 +31,19 @@ func createaMetadataTable(db *sql.DB) {
 		nft_title 	text,
 		nft_id		text,
 		copyright 	text
+	)`
+
+	_, err := db.Exec(createStmt)
+	checkError(err, createStmt)
+}
+
+func createRentalRequestTable(db *sql.DB) {
+	createStmt := `create table IF NOT EXISTS "rental_request" (
+		account_id 		text,
+		user_id 		text,
+		nft_id			text,
+		rental_period	text,
+		timestamp	 	date
 	)`
 
 	_, err := db.Exec(createStmt)

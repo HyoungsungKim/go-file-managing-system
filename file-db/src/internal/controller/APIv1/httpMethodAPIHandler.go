@@ -46,6 +46,7 @@ func SetupRouter(db *sql.DB) *gin.Engine {
 	})
 
 	v1 := router.Group("/")
+	indexGroup(db, v1.Group("/")) // 되나...?
 	uploadGroup(db, v1.Group("/upload"))
 	collectionGroup(db, v1.Group("/collection"))
 	requestGroup(db, v1.Group("/request"))
@@ -68,6 +69,67 @@ func ReverseProxy(c *gin.Context) {
 	}
 
 	proxy.ServeHTTP(c.Writer, c.Request)
+}
+
+func indexGroup(db *sql.DB, router *gin.RouterGroup) {
+	router.GET("/user-logs/:accountid", func(c *gin.Context) {
+		var userLogs utils.UserLogs
+
+		accountId := c.Param("accountId")
+		rows := DBHandler.SelectUserLogs(db, accountId)
+		defer rows.Close()
+
+		for rows.Next() {
+			if err := rows.Scan(
+				&userLogs.AccountId,
+				&userLogs.LastestTimestamp,
+			); err != nil {
+				panic(err)
+			}
+		}
+		c.JSON(http.StatusOK, userLogs)
+	})
+
+	router.GET("/rental-logs/:accountid", func(c *gin.Context) {
+		type RentalLogsList struct {
+			AccountId     string   `json:"account_id"`
+			UserIds       []string `json:"user_ids"`
+			NFTIds        []string `json:"nft_ids"`
+			RentalPeriods []string `json:"rental_periods"`
+			Timestamps    []string `json:"timestamps"`
+		}
+
+		var rentalLogsList RentalLogsList
+
+		rentalLogsList.AccountId = c.Param("accountId")
+		rows := DBHandler.SelectRentalRequestByAccountId(db, rentalLogsList.AccountId)
+		defer rows.Close()
+
+		for rows.Next() {
+			var rentalLogsFormat utils.RentalRequestFormat
+			if err := rows.Scan(
+				&rentalLogsFormat.AccountId,
+				&rentalLogsFormat.UserId,
+				&rentalLogsFormat.NFTId,
+				&rentalLogsFormat.RentalPeriod,
+				&rentalLogsFormat.Timestamp,
+			); err != nil {
+				panic(err)
+			}
+			rentalLogsList.UserIds = append(rentalLogsList.UserIds, rentalLogsFormat.UserId)
+			rentalLogsList.NFTIds = append(rentalLogsList.NFTIds, rentalLogsFormat.NFTId)
+			rentalLogsList.RentalPeriods = append(rentalLogsList.RentalPeriods, rentalLogsFormat.RentalPeriod)
+			rentalLogsList.Timestamps = append(rentalLogsList.Timestamps, rentalLogsFormat.Timestamp)
+		}
+		/*
+			jsonImageList, err := json.Marshal(imageList)
+			if err != nil {
+				panic(err)
+			}
+		*/
+		//log.Print(imageList)
+		c.JSON(http.StatusOK, rentalLogsList)
+	})
 }
 
 func uploadGroup(db *sql.DB, router *gin.RouterGroup) {
@@ -95,17 +157,17 @@ func uploadGroup(db *sql.DB, router *gin.RouterGroup) {
 		fmt.Println(string(doc))
 
 		uploadData := utils.UploadFormat{
-			AccountID: data["account_id"].(string),
+			AccountId: data["account_id"].(string),
 			FileName:  data["file_name"].(string),
 			Signature: data["signature"].(string),
 			Type:      data["type"].(string),
 			URI:       data["URI"].(string),
 			NFTtitle:  data["NFTtitle"].(string),
-			NFTID:     data["NFT_id"].(string),
+			NFTId:     data["NFT_id"].(string),
 			Copyright: data["Copyright"].(string),
 		}
 
-		DBHandler.Upload(db, uploadData)
+		DBHandler.InsertMetadata(db, uploadData)
 
 		c.String(http.StatusOK, string(doc))
 	})
@@ -113,35 +175,35 @@ func uploadGroup(db *sql.DB, router *gin.RouterGroup) {
 
 func collectionGroup(db *sql.DB, router *gin.RouterGroup) {
 	type ImageMetadataList struct {
-		AccountID  string   `json:"account_id"`
+		AccountId  string   `json:"account_id"`
 		Signature  string   `json:"signature"`
 		FileNames  []string `json:"file_names"`
 		URIs       []string `json:"URIs"`
 		Types      []string `json:"types"`
 		NFTtitles  []string `json:"NFTtitles"`
-		NFTIDs     []string `json:"NFT_ids"`
+		NFTIds     []string `json:"NFT_ids"`
 		Copyrights []string `json:"copyrights"`
 	}
 
-	router.GET("/:accountID", func(c *gin.Context) {
+	router.GET("/:accountId", func(c *gin.Context) {
 		var imageList ImageMetadataList
 		var signature string
-		accountID := c.Param("accountID")
-		imageList.AccountID = accountID
+		accountId := c.Param("accountId")
+		imageList.AccountId = accountId
 
-		rows := DBHandler.SelectAllImages(db, accountID)
+		rows := DBHandler.SelectAllImages(db, accountId)
 		defer rows.Close()
 
 		for rows.Next() {
 			var uploadedFormat utils.UploadFormat
 			if err := rows.Scan(
-				&uploadedFormat.AccountID,
+				&uploadedFormat.AccountId,
 				&uploadedFormat.FileName,
 				&uploadedFormat.Signature,
 				&uploadedFormat.Type,
 				&uploadedFormat.URI,
 				&uploadedFormat.NFTtitle,
-				&uploadedFormat.NFTID,
+				&uploadedFormat.NFTId,
 				&uploadedFormat.Copyright,
 			); err != nil {
 				panic(err)
@@ -151,7 +213,7 @@ func collectionGroup(db *sql.DB, router *gin.RouterGroup) {
 			imageList.URIs = append(imageList.URIs, uploadedFormat.URI)
 			imageList.Types = append(imageList.Types, uploadedFormat.Type)
 			imageList.NFTtitles = append(imageList.NFTtitles, uploadedFormat.NFTtitle)
-			imageList.NFTIDs = append(imageList.NFTIDs, uploadedFormat.NFTID)
+			imageList.NFTIds = append(imageList.NFTIds, uploadedFormat.NFTId)
 			imageList.Copyrights = append(imageList.Copyrights, uploadedFormat.Copyright)
 		}
 		imageList.Signature = signature
@@ -168,35 +230,35 @@ func collectionGroup(db *sql.DB, router *gin.RouterGroup) {
 
 func requestGroup(db *sql.DB, router *gin.RouterGroup) {
 	type ImageMetadata struct {
-		AccountID string `json:"account_id"`
+		AccountId string `json:"account_id"`
 		Signature string `json:"signature"`
 		FileName  string `json:"file_name"`
 		URI       string `json:"URI"`
 		Type      string `json:"type"`
 		NFTtitle  string `json:"NFTtitle"`
-		NFTID     string `json:"NFT_id"`
+		NFTId     string `json:"NFT_id"`
 		Copyright string `json:"copyright"`
 	}
 
-	router.GET("/:nftID", func(c *gin.Context) {
+	router.GET("/:nftId", func(c *gin.Context) {
 		var imageMetadata ImageMetadata
 		var signature string
-		nftID := c.Param("nftID")
-		imageMetadata.NFTID = nftID
+		nftId := c.Param("nftId")
+		imageMetadata.NFTId = nftId
 
-		rows := DBHandler.SelectImageByNFTID(db, nftID)
+		rows := DBHandler.SelectImageByNFTId(db, nftId)
 		defer rows.Close()
 
 		for rows.Next() {
 			var uploadedFormat utils.UploadFormat
 			if err := rows.Scan(
-				&uploadedFormat.AccountID,
+				&uploadedFormat.AccountId,
 				&uploadedFormat.FileName,
 				&uploadedFormat.Signature,
 				&uploadedFormat.Type,
 				&uploadedFormat.URI,
 				&uploadedFormat.NFTtitle,
-				&uploadedFormat.NFTID,
+				&uploadedFormat.NFTId,
 				&uploadedFormat.Copyright,
 			); err != nil {
 				panic(err)
@@ -204,19 +266,19 @@ func requestGroup(db *sql.DB, router *gin.RouterGroup) {
 
 			signature = uploadedFormat.Signature
 
-			imageMetadata.AccountID = uploadedFormat.AccountID
+			imageMetadata.AccountId = uploadedFormat.AccountId
 			imageMetadata.FileName = uploadedFormat.FileName
 			imageMetadata.URI = uploadedFormat.URI
 			imageMetadata.Type = uploadedFormat.Type
 			imageMetadata.NFTtitle = uploadedFormat.NFTtitle
-			imageMetadata.NFTID = uploadedFormat.NFTID
+			imageMetadata.NFTId = uploadedFormat.NFTId
 			imageMetadata.Copyright = uploadedFormat.Copyright
 			imageMetadata.Signature = signature
 
 			if imageMetadata.Copyright == "unlockable content" {
 				imageMetadata.URI = "404Images/lockedContent.png"
 				imageMetadata.FileName = "locked file"
-				imageMetadata.AccountID = "locked"
+				imageMetadata.AccountId = "locked"
 			}
 		}
 
@@ -228,5 +290,39 @@ func requestGroup(db *sql.DB, router *gin.RouterGroup) {
 		*/
 		//log.Print(imageList)
 		c.JSON(http.StatusOK, imageMetadata)
+	})
+
+	router.POST("/submit", func(c *gin.Context) {
+		body := c.Request.Body
+		value, err := ioutil.ReadAll(body)
+		if err != nil {
+			panic(err)
+		}
+
+		var data map[string]interface{}
+		json.Unmarshal([]byte(value), &data)
+		c.JSON(http.StatusOK, gin.H{
+			"account_id":    data["account_id"],
+			"user_id":       data["user_id"],
+			"nft_id":        data["NFT_id"],
+			"rental_period": data["rental_period"],
+			"timestamp":     data["timestamp"],
+		})
+
+		fmt.Println(data)
+		doc, _ := json.Marshal(data)
+		fmt.Println(string(doc))
+
+		uploadData := utils.RentalRequestFormat{
+			AccountId:    data["account_id"].(string),
+			UserId:       data["user_id"].(string),
+			NFTId:        data["NFT_id"].(string),
+			RentalPeriod: data["rental_period"].(string),
+			Timestamp:    data["timestamp"].(string),
+		}
+
+		DBHandler.InsertRentalRequest(db, uploadData)
+
+		c.String(http.StatusOK, string(doc))
 	})
 }

@@ -1,8 +1,8 @@
 package utils
 
 type UserLogs struct {
-	AccountId        string `json:"account_id"`
-	LastestTimestamp string `json:"lastest_timestamp"`
+	AccountId       string `json:"account_id"`
+	LatestTimestamp string `json:"latest_timestamp"`
 }
 
 type UploadFormat struct {
@@ -19,6 +19,7 @@ type UploadFormat struct {
 type RentalRequestFormat struct {
 	AccountId    string `json:"account_id"`
 	UserId       string `json:"user_id"`
+	RequestorId  string `json:"requestor_id"`
 	NFTId        string `json:"nft_id"`
 	RentalPeriod string `json:"rental_period"`
 	Timestamp    string `json:"timestamp"`

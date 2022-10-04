@@ -5,6 +5,12 @@ import (
 	"fmt"
 )
 
+func resetDB(db *sql.DB) {
+	db.Exec(`drop table metadata`)
+	db.Exec(`drop table rental_request`)
+	db.Exec(`drop table user_logs`)
+}
+
 func generateTables(db *sql.DB) {
 	createMetadataTable(db)
 	createRentalRequestTable(db)
@@ -13,8 +19,9 @@ func generateTables(db *sql.DB) {
 
 func createUserLogsTable(db *sql.DB) {
 	createStmt := `create table IF NOT EXISTS "user_logs" (
-		account_id 		text,
-		timestamp	 	date
+		account_id 			text,
+		latest_timestamp	text,
+		PRIMARY KEY (account_id)
 	)`
 
 	_, err := db.Exec(createStmt)
@@ -42,8 +49,9 @@ func createRentalRequestTable(db *sql.DB) {
 		account_id 		text,
 		user_id 		text,
 		nft_id			text,
+		requestor_id    text,
 		rental_period	text,
-		timestamp	 	date
+		timestamp	 	text
 	)`
 
 	_, err := db.Exec(createStmt)

@@ -27,7 +27,7 @@ func SetupRouter(db *sql.DB) *gin.Engine {
 				"http://172.30.0.1:8090",
 				"http://172.30.0.1:3000",
 			},
-			AllowMethods: []string{"GET", "POST"},
+			AllowMethods: []string{"GET", "POST", "PUT"},
 			MaxAge:       12 * time.Hour,
 		},
 	))
@@ -72,7 +72,7 @@ func ReverseProxy(c *gin.Context) {
 }
 
 func indexGroup(db *sql.DB, router *gin.RouterGroup) {
-	router.GET("/user-logs/:accountid", func(c *gin.Context) {
+	router.GET("/user-logs/:accountId", func(c *gin.Context) {
 		var userLogs utils.UserLogs
 
 		accountId := c.Param("accountId")
@@ -82,7 +82,7 @@ func indexGroup(db *sql.DB, router *gin.RouterGroup) {
 		for rows.Next() {
 			if err := rows.Scan(
 				&userLogs.AccountId,
-				&userLogs.LastestTimestamp,
+				&userLogs.LatestTimestamp,
 			); err != nil {
 				panic(err)
 			}
@@ -90,11 +90,41 @@ func indexGroup(db *sql.DB, router *gin.RouterGroup) {
 		c.JSON(http.StatusOK, userLogs)
 	})
 
-	router.GET("/rental-logs/:accountid", func(c *gin.Context) {
+	router.PUT("/user-logs/:accountId", func(c *gin.Context) {
+
+		body := c.Request.Body
+		value, err := ioutil.ReadAll(body)
+		if err != nil {
+			panic(err)
+		}
+
+		//accountId := c.Param("accountId")
+		var data map[string]interface{}
+		json.Unmarshal([]byte(value), &data)
+		c.JSON(http.StatusOK, gin.H{
+			"account_id":       data["account_id"],
+			"latest_timestamp": data["latest_timestamp"],
+		})
+		fmt.Println(data)
+		doc, _ := json.Marshal(data)
+		fmt.Println(string(doc))
+
+		userLogs := utils.UserLogs{
+			AccountId:       data["account_id"].(string),
+			LatestTimestamp: data["latest_timestamp"].(string),
+		}
+
+		DBHandler.PutUserLogs(db, userLogs)
+
+		c.String(http.StatusOK, string(doc))
+	})
+
+	router.GET("/rental-logs/:accountId", func(c *gin.Context) {
 		type RentalLogsList struct {
 			AccountId     string   `json:"account_id"`
 			UserIds       []string `json:"user_ids"`
 			NFTIds        []string `json:"nft_ids"`
+			RequestorIds  []string `json:"requestor_ids"`
 			RentalPeriods []string `json:"rental_periods"`
 			Timestamps    []string `json:"timestamps"`
 		}
@@ -103,14 +133,15 @@ func indexGroup(db *sql.DB, router *gin.RouterGroup) {
 
 		rentalLogsList.AccountId = c.Param("accountId")
 		rows := DBHandler.SelectRentalRequestByAccountId(db, rentalLogsList.AccountId)
-		defer rows.Close()
 
+		defer rows.Close()
 		for rows.Next() {
 			var rentalLogsFormat utils.RentalRequestFormat
 			if err := rows.Scan(
 				&rentalLogsFormat.AccountId,
 				&rentalLogsFormat.UserId,
 				&rentalLogsFormat.NFTId,
+				&rentalLogsFormat.RequestorId,
 				&rentalLogsFormat.RentalPeriod,
 				&rentalLogsFormat.Timestamp,
 			); err != nil {
@@ -118,6 +149,7 @@ func indexGroup(db *sql.DB, router *gin.RouterGroup) {
 			}
 			rentalLogsList.UserIds = append(rentalLogsList.UserIds, rentalLogsFormat.UserId)
 			rentalLogsList.NFTIds = append(rentalLogsList.NFTIds, rentalLogsFormat.NFTId)
+			rentalLogsList.RequestorIds = append(rentalLogsList.RequestorIds, rentalLogsFormat.RequestorId)
 			rentalLogsList.RentalPeriods = append(rentalLogsList.RentalPeriods, rentalLogsFormat.RentalPeriod)
 			rentalLogsList.Timestamps = append(rentalLogsList.Timestamps, rentalLogsFormat.Timestamp)
 		}
@@ -304,6 +336,7 @@ func requestGroup(db *sql.DB, router *gin.RouterGroup) {
 		c.JSON(http.StatusOK, gin.H{
 			"account_id":    data["account_id"],
 			"user_id":       data["user_id"],
+			"requestor_id":  data["requestor_id"],
 			"nft_id":        data["NFT_id"],
 			"rental_period": data["rental_period"],
 			"timestamp":     data["timestamp"],
@@ -317,6 +350,7 @@ func requestGroup(db *sql.DB, router *gin.RouterGroup) {
 			AccountId:    data["account_id"].(string),
 			UserId:       data["user_id"].(string),
 			NFTId:        data["NFT_id"].(string),
+			RequestorId:  data["requestor_id"].(string),
 			RentalPeriod: data["rental_period"].(string),
 			Timestamp:    data["timestamp"].(string),
 		}

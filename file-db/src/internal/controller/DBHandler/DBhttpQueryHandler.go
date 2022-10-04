@@ -6,11 +6,6 @@ import (
 	"fileDB.com/src/internal/controller/utils"
 )
 
-func resetDB(db *sql.DB) {
-	db.Exec(`drop table metadata`)
-	db.Exec(`drop table rental_request`)
-}
-
 func SelectUserLogs(db *sql.DB, accountId string) *sql.Rows {
 	selectUserLogsStmt := `
 		SELECT * FROM user_logs WHERE account_id = $1
@@ -20,6 +15,17 @@ func SelectUserLogs(db *sql.DB, accountId string) *sql.Rows {
 	checkError(err, selectUserLogsStmt)
 
 	return rows
+}
+
+func PutUserLogs(db *sql.DB, userLogs utils.UserLogs) {
+	putUserLogsStmt := `
+		INSERT INTO user_logs ("account_id", "latest_timestamp") VALUES ($1, $2)
+		ON CONFLICT (account_id) DO UPDATE SET latest_timestamp = $2
+	`
+
+	_, err := db.Exec(putUserLogsStmt, userLogs.AccountId, userLogs.LatestTimestamp)
+	checkError(err, putUserLogsStmt)
+
 }
 
 func InsertMetadata(db *sql.DB, uploadFormat utils.UploadFormat) {
@@ -64,13 +70,14 @@ func SelectImageByNFTId(db *sql.DB, NFTId string) *sql.Rows {
 
 func InsertRentalRequest(db *sql.DB, rentalRequestFormat utils.RentalRequestFormat) {
 	uploadStmt := `
-	INSERT INTO "rental_request" ("account_id", "user_id", "nft_id", "rental_period", "timestamp") VALUES ($1, $2, $3, $4, $5)
+	INSERT INTO "rental_request" ("account_id", "user_id", "requestor_id", "nft_id", "rental_period", "timestamp") VALUES ($1, $2, $3, $4, $5, $6)
 `
 
 	_, err := db.Exec(uploadStmt,
 		rentalRequestFormat.AccountId,
 		rentalRequestFormat.UserId,
 		rentalRequestFormat.NFTId,
+		rentalRequestFormat.RequestorId,
 		rentalRequestFormat.RentalPeriod,
 		rentalRequestFormat.Timestamp,
 	)

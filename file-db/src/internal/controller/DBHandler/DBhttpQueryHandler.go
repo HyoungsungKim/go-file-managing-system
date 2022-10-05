@@ -76,8 +76,8 @@ func InsertRentalRequest(db *sql.DB, rentalRequestFormat utils.RentalRequestForm
 	_, err := db.Exec(uploadStmt,
 		rentalRequestFormat.AccountId,
 		rentalRequestFormat.UserId,
-		rentalRequestFormat.NFTId,
 		rentalRequestFormat.RequestorId,
+		rentalRequestFormat.NFTId,
 		rentalRequestFormat.RentalPeriod,
 		rentalRequestFormat.Timestamp,
 	)

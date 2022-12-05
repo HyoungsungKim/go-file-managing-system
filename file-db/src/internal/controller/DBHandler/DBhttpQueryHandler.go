@@ -30,10 +30,11 @@ func PutUserLogs(db *sql.DB, userLogs utils.UserLogs) {
 
 func InsertMetadata(db *sql.DB, uploadFormat utils.UploadFormat) {
 	insertMetadataStmt := `
-		INSERT INTO "metadata" ("account_id", "file_name", "signature","type", "uri", "nft_title", "nft_id", "copyright") VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		INSERT INTO "metadata" ("owner_id", "account_id", "file_name", "signature","type", "uri", "nft_title", "nft_id", "copyright", "uci") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 	`
 
 	_, err := db.Exec(insertMetadataStmt,
+		uploadFormat.OwnerId,
 		uploadFormat.AccountId,
 		uploadFormat.FileName,
 		uploadFormat.Signature,
@@ -42,6 +43,7 @@ func InsertMetadata(db *sql.DB, uploadFormat utils.UploadFormat) {
 		uploadFormat.NFTtitle,
 		uploadFormat.NFTId,
 		uploadFormat.Copyright,
+		uploadFormat.UCI,
 	)
 	checkError(err, insertMetadataStmt)
 }

@@ -22,6 +22,8 @@ var readableType = map[string]bool{
 	"pdf": true,
 	"mp3": true,
 	"wmv": true,
+	"jpg": true,
+	"jpeg": true,
 }
 
 func SetupRouter() *gin.Engine {
@@ -30,6 +32,7 @@ func SetupRouter() *gin.Engine {
 	router.Use(cors.New(
 		cors.Config{
 			AllowOrigins: []string{
+				"http://localhost:12144",
 				"http://localhost:3001", // for dev
 				"http://localhost:3010",
 				"http://172.30.0.1:8090",

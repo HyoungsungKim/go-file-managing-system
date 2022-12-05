@@ -30,6 +30,7 @@ func createUserLogsTable(db *sql.DB) {
 
 func createMetadataTable(db *sql.DB) {
 	createStmt := `create table IF NOT EXISTS "metadata" (
+		owner_id	text,
 		account_id 	text,
 		file_name 	text,
 		signature	text,
@@ -37,7 +38,8 @@ func createMetadataTable(db *sql.DB) {
 		URI    		text,
 		nft_title 	text,
 		nft_id		text,
-		copyright 	text
+		copyright 	text,
+		uci 		text
 	)`
 
 	_, err := db.Exec(createStmt)

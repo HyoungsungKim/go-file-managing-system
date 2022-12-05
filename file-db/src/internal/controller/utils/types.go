@@ -6,6 +6,7 @@ type UserLogs struct {
 }
 
 type UploadFormat struct {
+	OwnerId   string
 	AccountId string
 	FileName  string
 	Signature string
@@ -14,6 +15,7 @@ type UploadFormat struct {
 	NFTtitle  string
 	NFTId     string
 	Copyright string
+	UCI       string
 }
 
 type RentalRequestFormat struct {

@@ -175,6 +175,7 @@ func uploadGroup(db *sql.DB, router *gin.RouterGroup) {
 		var data map[string]interface{}
 		json.Unmarshal([]byte(value), &data)
 		c.JSON(http.StatusOK, gin.H{
+			"owner_id":   data["owner_id"],
 			"account_id": data["account_id"],
 			"file_name":  data["file_name"],
 			"signature":  data["signature"],
@@ -183,12 +184,14 @@ func uploadGroup(db *sql.DB, router *gin.RouterGroup) {
 			"NFTtitle":   data["NFTtitle"],
 			"NFT_id":     data["NFT_id"],
 			"Copyright":  data["Copyright"],
+			"UCI":        data["UCI"],
 		})
 		fmt.Println(data)
 		doc, _ := json.Marshal(data)
 		fmt.Println(string(doc))
 
 		uploadData := utils.UploadFormat{
+			OwnerId:   data["owner_id"].(string),
 			AccountId: data["account_id"].(string),
 			FileName:  data["file_name"].(string),
 			Signature: data["signature"].(string),
@@ -197,6 +200,7 @@ func uploadGroup(db *sql.DB, router *gin.RouterGroup) {
 			NFTtitle:  data["NFTtitle"].(string),
 			NFTId:     data["NFT_id"].(string),
 			Copyright: data["Copyright"].(string),
+			UCI:       data["UCI"].(string),
 		}
 
 		DBHandler.InsertMetadata(db, uploadData)
@@ -207,6 +211,7 @@ func uploadGroup(db *sql.DB, router *gin.RouterGroup) {
 
 func collectionGroup(db *sql.DB, router *gin.RouterGroup) {
 	type ImageMetadataList struct {
+		OwnerId    string   `json:"owner_id"`
 		AccountId  string   `json:"account_id"`
 		Signature  string   `json:"signature"`
 		FileNames  []string `json:"file_names"`
@@ -215,11 +220,13 @@ func collectionGroup(db *sql.DB, router *gin.RouterGroup) {
 		NFTtitles  []string `json:"NFTtitles"`
 		NFTIds     []string `json:"NFT_ids"`
 		Copyrights []string `json:"copyrights"`
+		UCIs       []string `json:"UCIs"`
 	}
 
 	router.GET("/:accountId", func(c *gin.Context) {
 		var imageList ImageMetadataList
 		var signature string
+		var ownerId string
 		accountId := c.Param("accountId")
 		imageList.AccountId = accountId
 
@@ -229,6 +236,7 @@ func collectionGroup(db *sql.DB, router *gin.RouterGroup) {
 		for rows.Next() {
 			var uploadedFormat utils.UploadFormat
 			if err := rows.Scan(
+				&uploadedFormat.OwnerId,
 				&uploadedFormat.AccountId,
 				&uploadedFormat.FileName,
 				&uploadedFormat.Signature,
@@ -237,9 +245,11 @@ func collectionGroup(db *sql.DB, router *gin.RouterGroup) {
 				&uploadedFormat.NFTtitle,
 				&uploadedFormat.NFTId,
 				&uploadedFormat.Copyright,
+				&uploadedFormat.UCI,
 			); err != nil {
 				panic(err)
 			}
+			ownerId = uploadedFormat.OwnerId
 			signature = uploadedFormat.Signature
 			imageList.FileNames = append(imageList.FileNames, uploadedFormat.FileName)
 			imageList.URIs = append(imageList.URIs, uploadedFormat.URI)
@@ -247,7 +257,9 @@ func collectionGroup(db *sql.DB, router *gin.RouterGroup) {
 			imageList.NFTtitles = append(imageList.NFTtitles, uploadedFormat.NFTtitle)
 			imageList.NFTIds = append(imageList.NFTIds, uploadedFormat.NFTId)
 			imageList.Copyrights = append(imageList.Copyrights, uploadedFormat.Copyright)
+			imageList.UCIs = append(imageList.UCIs, uploadedFormat.UCI)
 		}
+		imageList.OwnerId = ownerId
 		imageList.Signature = signature
 		/*
 			jsonImageList, err := json.Marshal(imageList)
@@ -262,6 +274,7 @@ func collectionGroup(db *sql.DB, router *gin.RouterGroup) {
 
 func requestGroup(db *sql.DB, router *gin.RouterGroup) {
 	type ImageMetadata struct {
+		OwnerId   string `json:"owner_id"`
 		AccountId string `json:"account_id"`
 		Signature string `json:"signature"`
 		FileName  string `json:"file_name"`
@@ -270,6 +283,7 @@ func requestGroup(db *sql.DB, router *gin.RouterGroup) {
 		NFTtitle  string `json:"NFTtitle"`
 		NFTId     string `json:"NFT_id"`
 		Copyright string `json:"copyright"`
+		UCI       string `json:"UCI"`
 	}
 
 	router.GET("/:nftId", func(c *gin.Context) {
@@ -284,6 +298,7 @@ func requestGroup(db *sql.DB, router *gin.RouterGroup) {
 		for rows.Next() {
 			var uploadedFormat utils.UploadFormat
 			if err := rows.Scan(
+				&uploadedFormat.OwnerId,
 				&uploadedFormat.AccountId,
 				&uploadedFormat.FileName,
 				&uploadedFormat.Signature,
@@ -292,12 +307,14 @@ func requestGroup(db *sql.DB, router *gin.RouterGroup) {
 				&uploadedFormat.NFTtitle,
 				&uploadedFormat.NFTId,
 				&uploadedFormat.Copyright,
+				&uploadedFormat.UCI,
 			); err != nil {
 				panic(err)
 			}
 
 			signature = uploadedFormat.Signature
 
+			imageMetadata.OwnerId = uploadedFormat.OwnerId
 			imageMetadata.AccountId = uploadedFormat.AccountId
 			imageMetadata.FileName = uploadedFormat.FileName
 			imageMetadata.URI = uploadedFormat.URI
@@ -306,6 +323,7 @@ func requestGroup(db *sql.DB, router *gin.RouterGroup) {
 			imageMetadata.NFTId = uploadedFormat.NFTId
 			imageMetadata.Copyright = uploadedFormat.Copyright
 			imageMetadata.Signature = signature
+			imageMetadata.UCI = uploadedFormat.UCI
 
 			if imageMetadata.Copyright == "unlockable content" {
 				imageMetadata.URI = "404Images/lockedContent.png"
